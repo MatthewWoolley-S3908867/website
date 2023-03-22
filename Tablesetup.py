@@ -1,7 +1,7 @@
 import boto3
 import json
 def makemusictable():
-
+    dynamodb = boto3.client('dynamodb')
     table = dynamodb.create_table(
     TableName='music',
         KeySchema=[

@@ -6,10 +6,20 @@
 </head>
 <body>
 <form action="/checkLogin" method="post">
- <label for="email">Email</label>
-    <input type="text" id="email" name="email" placeholder="Username" required>
+    <label for="email">Email</label>
+    <input type="text" id="email" name="email" placeholder="email" required>
+    <label for="password">Password</label>
+    <input type="text" id="Password" name="Password" placeholder="Password" required>
     <input type="submit" value="Submit">
 </form>
-
+{% with messages = get_flashed_messages() %}
+  {% if messages %}
+    <ul class="flashes">
+      {% for message in messages %}
+        <li>{{ message }}</li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+{% endwith %}
 </body>
 </html>

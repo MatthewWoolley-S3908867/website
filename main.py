@@ -17,10 +17,12 @@
 
 import datetime
 
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, flash
 import boto3
 
 app = Flask(__name__)
+app.secret_key = "passkeysetforflash"
+
 
 
 
@@ -42,10 +44,19 @@ def root():
 
 @app.route("/checkLogin", methods = ['POST'])
 def checkLogin():
+    dynamodb = boto3.resource('dynamodb')
+    table = dynamodb.Table('login')
     email = request.form['email']
-    if email == "email@email.com":
-        return root()
+    password = request.form['Password']
+    response = table.get_item(Key={'email': email})
+    if 'Item' in response:
+        if password == response['Item']['password']:
+            return root()
+        else:
+            flash('Incorrect Password')
+            return render_template("frontpage.html")
     else:
+        flash('Incorrect Email')
         return render_template("frontpage.html")
 
 
