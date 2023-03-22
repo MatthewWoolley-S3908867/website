@@ -19,17 +19,14 @@ import datetime
 
 from flask import Flask, render_template, request, flash
 import boto3
-
 app = Flask(__name__)
 app.secret_key = "passkeysetforflash"
 
 
 
 
-@app.route('/frontpage', methods=('GET', 'POST'))
-def frontpage():
-    return render_template('frontpage.html')
 
+#Home page functions
 @app.route('/')
 def root():
     # For the sake of example, use static information to inflate the template.
@@ -41,6 +38,10 @@ def root():
 
 
     return render_template('index.html', times=dummy_times)
+#________________________________________________login functions
+@app.route('/login', methods=('GET', 'POST'))
+def loginpage():
+    return render_template('loginpage.html')
 
 @app.route("/checkLogin", methods = ['POST'])
 def checkLogin():
@@ -54,13 +55,36 @@ def checkLogin():
             return root()
         else:
             flash('Incorrect Password')
-            return render_template("frontpage.html")
+            return render_template("loginpage.html")
     else:
         flash('Incorrect Email')
-        return render_template("frontpage.html")
+        return render_template("loginpage.html")
+#______________________________________________________________________register functions
+@app.route('/register', methods=('GET', 'POST'))
+def registerpage():
+    return render_template('registerpage.html')
 
+@app.route("/checkRegister", methods = ['POST'])
+def checkRegister():
+    dynamodb = boto3.resource('dynamodb')
+    table = dynamodb.Table('login')
+    email = request.form['email']
+    password = request.form['Password']
+    Username = request.form['Username']
 
-
+    response = table.get_item(Key={'email': email})
+    if 'Item' in response:
+        flash('The email already exists')
+        return render_template("registerpage.html")
+    else:
+        item = {
+            'password': password,
+            'email': email,
+            'user_name': Username
+        }
+        table.put_item(Item=item)
+        return loginpage()
+#_________________________________________________
 
 
 

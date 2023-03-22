@@ -16,5 +16,28 @@
 
 body {
   font-family: "helvetica", sans-serif;
+  background-color: rgba(227, 164, 112, 0.63);
   text-align: center;
+}
+label{
+display:inline-block;
+width:200px;
+margin-right:0px;
+text-align:right;
+}
+
+input{
+
+}
+
+form{
+border:none;
+width:500px;
+margin:0px auto;
+}
+
+br {
+            display: block;
+            content: "";
+            margin-top: 25px;
 }
