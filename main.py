@@ -17,7 +17,7 @@
 
 import datetime
 
-from flask import Flask, render_template, request, flash
+from flask import Flask, render_template, request, flash, session
 import boto3
 app = Flask(__name__)
 app.secret_key = "passkeysetforflash"
@@ -43,6 +43,11 @@ def root():
 def loginpage():
     return render_template('loginpage.html')
 
+@app.route("/logout")
+def logout():
+    session['logged_in'] = False
+    return root()
+
 @app.route("/checkLogin", methods = ['POST'])
 def checkLogin():
     dynamodb = boto3.resource('dynamodb')
@@ -52,6 +57,8 @@ def checkLogin():
     response = table.get_item(Key={'email': email})
     if 'Item' in response:
         if password == response['Item']['password']:
+            session['logged_in'] = True
+            session['user_name'] = response['Item']['user_name']
             return root()
         else:
             flash('Incorrect Password')
@@ -59,6 +66,7 @@ def checkLogin():
     else:
         flash('Incorrect Email')
         return render_template("loginpage.html")
+
 #______________________________________________________________________register functions
 @app.route('/register', methods=('GET', 'POST'))
 def registerpage():
