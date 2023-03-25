@@ -13,6 +13,17 @@
   {% for time in times %}
     <p>{{ time }}</p>
   {% endfor %}
+{% if session['logged_in'] %}
+    <div style="position: absolute; top: 0; right: 0; width: 100px; text-align:center; border: 2px solid #000;">
+    <p> Hello, {{ session['user_name'] }} </p>
+    </div>
+    <br>
+
+    <div style="position: absolute; top: 60px; right: 0; width: 100px; text-align:center; border: 2px solid #000;">
+    <a href={{url_for('logout')}}>Logout</a>
+    </div>
+
+{% else %}
   <div style="position: absolute; top: 0; right: 0; width: 100px; text-align:center; border: 2px solid #000;">
   <a href={{url_for('loginpage')}}>Login</a>
   </div>
@@ -21,8 +32,8 @@
   <div style="position: absolute; top: 25px; right: 0; width: 100px; text-align:center; border: 2px solid #000;">
   <a href={{url_for('registerpage')}}>Register</a>
   </div>
-
-
+{% endif %}
+........
 
 </body>
 </html>
