@@ -31,13 +31,7 @@ app.secret_key = "passkeysetforflash"
 def root():
     # For the sake of example, use static information to inflate the template.
     # This will be replaced with real information in later steps.
-    dummy_times = [datetime.datetime(2022, 1, 1, 10, 0, 0),
-                   datetime.datetime(2022, 1, 2, 10, 30, 0),
-                   datetime.datetime(2022, 1, 3, 11, 0, 0),
-                   ]
-
-
-    return render_template('index.html', times=dummy_times)
+    return render_template('index.html', qitems=[])
 #________________________________________________login functions
 @app.route('/login', methods=('GET', 'POST'))
 def loginpage():
@@ -46,6 +40,8 @@ def loginpage():
 @app.route("/logout")
 def logout():
     session['logged_in'] = False
+    session['user_name'] = ""
+    session['email'] = ""
     return root()
 
 @app.route("/checkLogin", methods = ['POST'])
@@ -59,6 +55,8 @@ def checkLogin():
         if password == response['Item']['password']:
             session['logged_in'] = True
             session['user_name'] = response['Item']['user_name']
+            session['email'] = response['Item']['email']
+
             return root()
         else:
             flash('Incorrect Password')
@@ -74,7 +72,7 @@ def registerpage():
 
 @app.route("/checkRegister", methods = ['POST'])
 def checkRegister():
-    dynamodb = boto3.resource('dynamodb')
+    dynamodb = boto3.client('dynamodb')
     table = dynamodb.Table('login')
     email = request.form['email']
     password = request.form['Password']
@@ -93,8 +91,64 @@ def checkRegister():
         table.put_item(Item=item)
         return loginpage()
 #_________________________________________________
-
-
+@app.route("/query", methods = ['POST'])
+def query():
+    items = []
+    dynamodb = boto3.resource('dynamodb')
+    table = dynamodb.Table('music')
+    Title = request.form['Title']
+    Yearof = request.form['Year']
+    Artist = request.form['Artist']
+    if(Artist == "" and Title == "" and Yearof == ""):
+        flash('You must fill in at least one criteria')
+        return (render_template("index.html"))
+    if(Title != ""):
+        query_params = {
+            'KeyConditionExpression': 'Title = :value1',
+            'ExpressionAttributeValues': {
+                ':value1': Title
+            }
+        }
+        response = table.query(**query_params)
+        for obj in response["Items"]:
+            items.append(obj)
+    if (Artist != ""):
+        filter_expression = 'Artist = :Artist'
+        expression_attribute_values = {
+            ':Artist': Artist
+        }
+        response = table.scan(
+                    FilterExpression=filter_expression,
+                    ExpressionAttributeValues=expression_attribute_values)
+        for obj in response["Items"]:
+            if obj not in items:
+                items.append(obj)
+    if (Yearof != ""):
+        reserved_attribute_name = 'Year'
+        expression_attribute_name = '#y'
+        filter_expression = f'{expression_attribute_name} = :Year'
+        expression_attribute_values = {
+            ':Year': Yearof
+        }
+        expression_attribute_names = {
+            expression_attribute_name: reserved_attribute_name
+        }
+        response = table.scan(
+                    FilterExpression=filter_expression,
+                    ExpressionAttributeValues=expression_attribute_values,
+                    ExpressionAttributeNames=expression_attribute_names
+        )
+        for obj in response["Items"]:
+            if obj not in items:
+                items.append(obj)
+    print(items)
+    if(len(items) == 0):
+        flash('No items found')
+    for obj in items:
+        obj["Img_url"] = "https://songimagemymusicsite.s3.amazonaws.com/" + obj["Title"].replace(" ", "_") +"_Image.jpg"
+        obj["Img_url"] =  obj["Img_url"].replace("#" , "%23")
+        print(obj["Img_url"])
+    return (render_template("index.html",qitems = items))
 
 
 if __name__ == '__main__':

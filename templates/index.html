@@ -7,33 +7,73 @@
 </head>
 <body>
 
-  <h1>The Music Store</h1>
 
-  <h2>Last 10 visits</h2>
-  {% for time in times %}
-    <p>{{ time }}</p>
-  {% endfor %}
 {% if session['logged_in'] %}
     <div style="position: absolute; top: 0; right: 0; width: 100px; text-align:center; border: 2px solid #000;">
     <p> Hello, {{ session['user_name'] }} </p>
     </div>
     <br>
-
     <div style="position: absolute; top: 60px; right: 0; width: 100px; text-align:center; border: 2px solid #000;">
     <a href={{url_for('logout')}}>Logout</a>
     </div>
+    <H1> Query </H1>
+    <form action="/query" method="post">
+    <label for="Title">Title:</label>
+    <input type="text" id="Title" name="Title" placeholder="Title">
+    <br>
+    <label for="Year">Year:</label>
+    <input type="Text" id="Year" name="Year" placeholder="Year" >
+    <br>
+    <label for="Artist">Artist:</label>
+    <input type="text" id="Artist" name="Artist" placeholder="Artist">
+    <br>
+    <input type="submit" value="Query">
+</form>
+{% with messages = get_flashed_messages() %}
+  {% if messages %}
+    <ul class="flashes">
+      {% for message in messages %}
+        <li>{{ message }}</li>
+      {% endfor %}
+    </ul>
+{% endif %}
+{% if qitems %}
+<table>
+  <tr>
+    <th>Song</th>
+    <th>Artist</th>
+    <th>Year</th>
+    <th>Image</th>
+  </tr>
+    {% for obj in qitems%}
+    <tr>
+    <td>{{obj["Title"]}}</td>
+    <td>{{obj["Artist"]}}</td>
+    <td>{{obj["Year"]}}</td>
+    <td><img src="{{obj["Img_url"]}}" alt="My Image"  width="50" height="50"></td>
+    </tr>
+    {% endfor %}
+</table>
+{% endif %}
+{% endwith %}
+
+
+
+
+
+
+
 
 {% else %}
   <div style="position: absolute; top: 0; right: 0; width: 100px; text-align:center; border: 2px solid #000;">
   <a href={{url_for('loginpage')}}>Login</a>
   </div>
   <br>
-
+  <h1>PLease log in or register to use the website -----></h1>
   <div style="position: absolute; top: 25px; right: 0; width: 100px; text-align:center; border: 2px solid #000;">
   <a href={{url_for('registerpage')}}>Register</a>
   </div>
 {% endif %}
-........
 
 </body>
 </html>
