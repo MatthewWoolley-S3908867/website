@@ -39,8 +39,12 @@ table{
 border:none;
 width:500px;
 margin:0px auto;
+border-collapse: collapse;
+border: 1px solid;
 }
-
+th, td {
+  border: 1px solid;
+}
 
 br {
             display: block;
