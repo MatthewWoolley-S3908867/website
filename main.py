@@ -29,6 +29,10 @@ app.secret_key = "passkeysetforflash"
 #Home page functions
 @app.route('/')
 def root():
+    session['logged_in'] = False
+    session['user_name'] = ""
+    session['email'] = ""
+    session['items'] = []
     # For the sake of example, use static information to inflate the template.
     # This will be replaced with real information in later steps.
     return render_template('index.html', qitems=session['items'],subs=getsubs())
@@ -39,10 +43,6 @@ def loginpage():
 
 @app.route("/logout")
 def logout():
-    session['logged_in'] = False
-    session['user_name'] = ""
-    session['email'] = ""
-    session['items'] = []
     return root()
 
 @app.route("/checkLogin", methods = ['POST'])
@@ -58,7 +58,8 @@ def checkLogin():
             session['user_name'] = response['Item']['user_name']
             session['email'] = response['Item']['email']
 
-            return root()
+            return (render_template("index.html",qitems = session['items'],subs=getsubs()))
+
         else:
             flash('Incorrect Password')
             return render_template("loginpage.html")
@@ -148,7 +149,7 @@ def query():
         obj["Img_url"] = "https://songimagemymusicsite.s3.amazonaws.com/" + obj["Title"].replace(" ", "_") +"_Image.jpg"
         obj["Img_url"] =  obj["Img_url"].replace("#", "%23")
     session['items'] = items
-    return (render_template("index.html",qitems = items,subs=getsubs()))
+    return (render_template("index.html",qitems = session['items'],subs=getsubs()))
 
 
 @app.route("/Subscribe", methods = ['POST'])
@@ -224,6 +225,9 @@ if __name__ == '__main__':
     # the "static" directory. See:
     # http://flask.pocoo.org/docs/1.0/quickstart/#static-files. Once deployed,
     # App Engine itself will serve those files as configured in app.yaml.
-    app.run(host='127.0.0.1', port=8080, debug=True)
+
+    app.run(host='0.0.0.0', port=8080, debug=True)
+
+
 # [END gae_python3_render_template]
 # [END gae_python38_render_template]
