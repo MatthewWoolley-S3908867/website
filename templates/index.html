@@ -9,13 +9,39 @@
 
 
 {% if session['logged_in'] %}
-    <div style="position: absolute; top: 0; right: 0; width: 100px; text-align:center; border: 2px solid #000;">
+    <div style="position: absolute; top: 0; right: 0; width: 150px; text-align:center; border: 2px solid #000;">
     <p> Hello, {{ session['user_name'] }} </p>
     </div>
     <br>
-    <div style="position: absolute; top: 60px; right: 0; width: 100px; text-align:center; border: 2px solid #000;">
+    <div style="position: absolute; top: 60px; right: 0; width: 150px; text-align:center; border: 2px solid #000;">
     <a href={{url_for('logout')}}>Logout</a>
     </div>
+    {% if subs %}
+    <H1> Subscriptions </H1>
+    <table>
+    <tr>
+    <th>Song</th>
+    <th>Artist</th>
+    <th>Year</th>
+    <th>Image</th>
+    </tr>
+    <form action="/UnSubscribe" method="post">
+    {% for obj in subs%}
+    <tr>
+    <td>{{obj["Title"]}}</td>
+    <td>{{obj["Artist"]}}</td>
+    <td>{{obj["Year"]}}</td>
+    <td><img src="{{obj["Img_url"]}}" alt="My Image"  width="50" height="50"></td>
+    <td><input type="submit" name="{{obj["Title"]}}" value="Unsubscribe" placeholder="Unsubscribe"></td>
+    </tr>
+    {% endfor %}
+    </form>
+    </table>
+     {% else %}
+        <h1> you have no subscriptions, get started below</h1>
+    {% endif %}
+
+
     <H1> Query </H1>
     <form action="/query" method="post">
     <label for="Title">Title:</label>
@@ -45,15 +71,17 @@
     <th>Year</th>
     <th>Image</th>
   </tr>
+    <form action="/Subscribe" method="post">
     {% for obj in qitems%}
     <tr>
     <td>{{obj["Title"]}}</td>
     <td>{{obj["Artist"]}}</td>
     <td>{{obj["Year"]}}</td>
     <td><img src="{{obj["Img_url"]}}" alt="My Image"  width="50" height="50"></td>
-    <td><input type="submit" name="submit_button" value="{{obj["Title"]}}" placeholder="Subscribe"></td>
+    <td><input type="submit" name="{{obj["Title"]}}" value="Subscribe" placeholder="Subscribe"></td>
     </tr>
     {% endfor %}
+    </form>
 </table>
 {% endif %}
 {% endwith %}

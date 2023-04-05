@@ -31,7 +31,7 @@ app.secret_key = "passkeysetforflash"
 def root():
     # For the sake of example, use static information to inflate the template.
     # This will be replaced with real information in later steps.
-    return render_template('index.html', qitems=[])
+    return render_template('index.html', qitems=session['items'],subs=getsubs())
 #________________________________________________login functions
 @app.route('/login', methods=('GET', 'POST'))
 def loginpage():
@@ -42,6 +42,7 @@ def logout():
     session['logged_in'] = False
     session['user_name'] = ""
     session['email'] = ""
+    session['items'] = []
     return root()
 
 @app.route("/checkLogin", methods = ['POST'])
@@ -101,7 +102,7 @@ def query():
     Artist = request.form['Artist']
     if(Artist == "" and Title == "" and Yearof == ""):
         flash('You must fill in at least one criteria')
-        return (render_template("index.html"))
+        return (render_template("index.html", qitems=[], subs=getsubs()))
     if(Title != ""):
         query_params = {
             'KeyConditionExpression': 'Title = :value1',
@@ -141,14 +142,77 @@ def query():
         for obj in response["Items"]:
             if obj not in items:
                 items.append(obj)
-    print(items)
     if(len(items) == 0):
         flash('No items found')
     for obj in items:
         obj["Img_url"] = "https://songimagemymusicsite.s3.amazonaws.com/" + obj["Title"].replace(" ", "_") +"_Image.jpg"
-        obj["Img_url"] =  obj["Img_url"].replace("#" , "%23")
-        print(obj["Img_url"])
-    return (render_template("index.html",qitems = items))
+        obj["Img_url"] =  obj["Img_url"].replace("#", "%23")
+    session['items'] = items
+    return (render_template("index.html",qitems = items,subs=getsubs()))
+
+
+@app.route("/Subscribe", methods = ['POST'])
+def Subscribe():
+    vals = dict(request.form)
+    convtwolist = list(vals.keys())[0]
+    finaltitle = str(convtwolist)
+    email = session['email']
+    dynamodb = boto3.resource('dynamodb')
+    table = dynamodb.Table('Subscriptions')
+    response = table.get_item(Key={'email': email, 'Title' : finaltitle})
+    if 'Item' in response:
+        flash("you are already subscribed!")
+        return (render_template("index.html", qitems=session['items'],subs=getsubs()))
+    else:
+        item = {
+            'email': email,
+            'Title': finaltitle
+        }
+        table.put_item(Item=item)
+    return (render_template("index.html", qitems=session['items'],subs=getsubs()))
+
+def getsubs():
+    if not session['logged_in']:
+        return []
+    rawsubs = []
+    subs = []
+    dynamodb = boto3.resource('dynamodb')
+    table = dynamodb.Table('Subscriptions')
+    query_params = {
+        'KeyConditionExpression': 'email = :value1',
+        'ExpressionAttributeValues': {
+            ':value1': session['email']
+        }
+    }
+    response = table.query(**query_params)
+    for obj in response["Items"]:
+        rawsubs.append(obj)
+    table = dynamodb.Table('music')
+    for obj in rawsubs:
+        query_params = {
+            'KeyConditionExpression': 'Title = :value1',
+            'ExpressionAttributeValues': {
+                ':value1': obj['Title']
+            }
+        }
+        response = table.query(**query_params)
+        for obj in response["Items"]:
+            subs.append(obj)
+    for obj in subs:
+        obj["Img_url"] = "https://songimagemymusicsite.s3.amazonaws.com/" + obj["Title"].replace(" ", "_") +"_Image.jpg"
+        obj["Img_url"] =  obj["Img_url"].replace("#", "%23")
+    return subs
+
+@app.route("/UnSubscribe", methods = ['POST'])
+def UnSubscribe():
+    vals = dict(request.form)
+    convtwolist = list(vals.keys())[0]
+    finaltitle = str(convtwolist)
+    email = session['email']
+    dynamodb = boto3.resource('dynamodb')
+    table = dynamodb.Table('Subscriptions')
+    table.delete_item(Key={'email': email, 'Title' : finaltitle})
+    return (render_template("index.html", qitems=session['items'],subs=getsubs()))
 
 
 if __name__ == '__main__':
